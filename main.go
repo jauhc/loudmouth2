@@ -79,14 +79,22 @@ func listenerLoop(t *telnet.Conn) {
 	}
 }
 
+func stateParser(gsi *csgsi.Game) {
+	gsi.Listen(":1489")
+	go func() {
+		for state := range gsi.Channel {
+			log.Println(state.Player.Name)
+		}
+	}()
+}
+
 func main() {
 	log.Println("start")
 	t := creatListener()
 	go listenerLoop(t) // thread for listening to rcon
 	log.Println("Console connected!")
 	gsi := createStateListener()
-	for state := range gsi.Channel { // blocking loop, what we want for now
-		log.Println(state.Player.Name)
-	}
+	stateParser(gsi)
+	gsi.Channel
 	log.Println("end")
 }
