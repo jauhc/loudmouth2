@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
 	"sync"
@@ -132,16 +134,14 @@ func ammoWarning(state *csgsi.State) {
 	}
 }
 
-// fuck, redo; previous ONLY updates when worth updating
+// DONT READ THIS
 func killCheck(state *csgsi.State) {
 	if state.Previously != nil {
 		if state.Previously.Player != nil {
 			if state.Previously.Player.Match_stats != nil {
 				// i feel like im missing something very important
 				if state.Previously.Player.Match_stats.Kills < state.Player.Match_stats.Kills {
-					log.Println("KILL")
-					log.Printf("curkills: %d", state.Player.Match_stats.Kills)
-					log.Printf("prevkills: %d", state.Previously.Player.Match_stats.Kills)
+					say(tellKill(state))
 					return
 				}
 			}
@@ -149,7 +149,7 @@ func killCheck(state *csgsi.State) {
 	}
 }
 
-// check for added instead
+// dont read this either thanks
 func deathCheck(state *csgsi.State) {
 	if state.Previously != nil {
 		if state.Previously.Player != nil {
@@ -158,13 +158,81 @@ func deathCheck(state *csgsi.State) {
 				if state.Previously.Player.Match_stats.Deaths < state.Player.Match_stats.Deaths &&
 					state.Previously.Player.Match_stats.Deaths > 0 {
 					log.Println("DETH")
-					log.Printf("curdeth: %d", state.Player.Match_stats.Deaths)
-					log.Printf("prevdeth: %d", state.Previously.Player.Match_stats.Deaths)
 					return
 				}
 			}
 		}
 	}
+}
+
+func tellKill(state *csgsi.State) string {
+	var cheese []string
+	if state.Player.State.Flashed > 50 {
+		cheese = []string{
+			"hey i was blind",
+			"owned while flashed",
+			"ez blind kills",
+			"i am blind, literally"}
+	} else if state.Player.State.Smoked > 50 {
+		cheese = []string{
+			"~ from within the smoke ~",
+			"puff puff im in the smokes",
+			"really cloudy here",
+			"i could barely see anything here wtf"}
+	} else {
+		cheese = []string{
+			"blap blap",
+			"sit down",
+			"later",
+			"hey, how about a break?",
+			"you alright?",
+			"hit or miss? guess i never miss, huh?",
+			"ez",
+			"ezpz",
+			"you just got dabbed on!",
+			"owned",
+			"ownd",
+			"whats happening with you",
+			"get pooped on"}
+	}
+
+	postfix := []string{
+		"kid",
+		"kiddo",
+		"nerd",
+		"geek",
+		"noob"}
+
+	picked := cheese[rand.Intn(len(cheese))]
+
+	if rand.Float32() > 0.6 {
+		return fmt.Sprintf("%s %s\nenemydown", picked, postfix[rand.Intn(len(postfix))])
+	}
+
+	return fmt.Sprintf("%s\nenemydown", picked)
+}
+
+func tellDeath(state *csgsi.State) string {
+	var cheese []string
+	if state.Player.State.Flashed > 50 {
+		cheese = []string{
+			"i was blind lole",
+			"how do i shoot blind?",
+			"oops i was flashed",
+			"help i cant see",
+			"why is my screen white"}
+	} else {
+		cheese = []string{
+			"oops",
+			"i meant to do that :)",
+			"wtf lag",
+			"i was looking at the map",
+			"excuse me?",
+			"oh",
+			"fricking tickrate",
+			"omg 64 tick"}
+	}
+	return cheese[rand.Intn(len(cheese))]
 }
 
 // main logic here with game events
@@ -182,14 +250,27 @@ func stateParser(gsi *csgsi.Game) {
 	}()
 }
 
+func say(cheese string) {
+	output := fmt.Sprintf("say %s\n", cheese)
+	t.Write([]byte(output))
+}
+
 var (
 	beep      = syscall.MustLoadDLL("Kernel32.dll").MustFindProc("Beep")
 	stateWait sync.Once
+	t         = creatListener()
 )
+
+func init() {
+	seed := time.Now().UTC().UnixNano()
+	seed ^= (seed << 12)
+	seed ^= (seed >> 25)
+	seed ^= (seed << 27)
+	rand.Seed(seed) // big seed
+}
 
 func main() {
 	log.Println("---START---")
-	t := creatListener()
 	go listenerLoop(t) // thread for listening to rcon
 	log.Println("Console connected!")
 	gsi := createStateListener()
