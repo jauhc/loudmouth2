@@ -95,6 +95,6 @@ func main() {
 	log.Println("Console connected!")
 	gsi := createStateListener()
 	stateParser(gsi)
-	gsi.Channel
+	//
 	log.Println("end")
 }
