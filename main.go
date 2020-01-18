@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/list"
 	"fmt"
 	"log"
 	"math/rand"
@@ -22,27 +23,29 @@ import (
 \\------------------------//
 	TODO
 		! launch params
-		! http server for listening to game
 		% UI
 		!% logics
-		% wrapper for timers
 		? location parser with m_szLastPlaceName and "getpos"
 		! error checks
 	just rewrite shit tbh
-
-	options
-		gsi https://github.com/dank/go-csgsi
-		telnet https://github.com/ziutek/telnet/
-
-	flow
-		attempt to connect (telnet prio)
-		check configs -> read/write them
-		go to listen loop
 */
 
-// short TODO
-// how to wait for goroutines to exit before main quits
-// redirect their output to main's
+type loudSettings struct {
+	state  bool
+	owo    bool
+	kills  bool
+	deaths bool
+	greets bool
+	clanid bool
+	clanfx bool
+}
+
+// structs default to 0 / false
+func loadSettings() loudSettings {
+	return loudSettings{
+		state: true,
+	}
+}
 
 // short for error check
 func ec(err error) {
@@ -141,7 +144,7 @@ func killCheck(state *csgsi.State) {
 			if state.Previously.Player.Match_stats != nil {
 				// i feel like im missing something very important
 				if state.Previously.Player.Match_stats.Kills < state.Player.Match_stats.Kills {
-					say(tellKill(state))
+					speechBuffer.PushBack(tellKill(state))
 					return
 				}
 			}
@@ -158,6 +161,7 @@ func deathCheck(state *csgsi.State) {
 				if state.Previously.Player.Match_stats.Deaths < state.Player.Match_stats.Deaths &&
 					state.Previously.Player.Match_stats.Deaths > 0 {
 					log.Println("DETH")
+					// TODO add to list instead
 					return
 				}
 			}
@@ -235,13 +239,53 @@ func tellDeath(state *csgsi.State) string {
 	return cheese[rand.Intn(len(cheese))]
 }
 
+// could be cleaner
+func clanTicker() {
+	fxState := true // true fowards, false backwards
+	clanList := []int{7670261, 7670266, 7670268, 7670273, 7670276, 7670621, 7670634, 7670641, 7670647}
+	clanIdx := 0
+	for range clanTimer.C {
+		if !settings.clanid {
+			return
+		}
+		if !settings.clanfx {
+			if clanIdx >= len(clanList) {
+				clanIdx = 0
+			}
+		} else if settings.clanfx {
+			if clanIdx == 0 {
+				fxState = true
+			} else if clanIdx+1 >= len(clanList) {
+				fxState = false
+			}
+			if fxState {
+				// cl_clanid clanList[clanIdx++]
+			} else if !fxState {
+				// cl_clanid clanList[clanIdx--]
+			}
+		}
+
+	}
+}
+
+func speechTicker() {
+	for range speechTimer.C {
+		if speechBuffer.Len() > 0 {
+			pop := speechBuffer.Front()
+			poop := fmt.Sprintf("%s", pop.Value)
+			say(poop)
+			speechBuffer.Remove(pop)
+		}
+	}
+}
+
 // main logic here with game events
 func stateParser(gsi *csgsi.Game) {
 	go func() {
 		for state := range gsi.Channel {
 			if state.Round.Phase == "live" || 1 == 1 {
 				// log.Println("live")
-				// logics here
+				//TODO settings checks
 				ammoWarning(&state) // warms when ammo is low :)
 				killCheck(&state)
 				deathCheck(&state)
@@ -255,10 +299,21 @@ func say(cheese string) {
 	t.Write([]byte(output))
 }
 
+const ()
+
 var (
+	// tickers (timers) to handle spamming
+	speechTimer = time.NewTicker(900 * time.Millisecond)
+	clanTimer   = time.NewTicker(400 * time.Millisecond)
+
+	speechBuffer = list.New()
+
+	// beeping for low ammo warning //TODO add OS check)
 	beep      = syscall.MustLoadDLL("Kernel32.dll").MustFindProc("Beep")
 	stateWait sync.Once
-	t         = creatListener()
+
+	t        = creatListener()
+	settings = loadSettings()
 )
 
 func init() {
