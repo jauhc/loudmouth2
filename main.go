@@ -252,6 +252,7 @@ func clanTicker() {
 			if clanIdx >= len(clanList) {
 				clanIdx = 0
 			}
+			clanIdx++
 		} else if settings.clanfx {
 			if clanIdx == 0 {
 				fxState = true
@@ -272,8 +273,8 @@ func speechTicker() {
 	for range speechTimer.C {
 		if speechBuffer.Len() > 0 {
 			pop := speechBuffer.Front()
-			poop := fmt.Sprintf("%s", pop.Value)
-			say(poop)
+			poop := fmt.Sprintf("say %s", pop.Value)
+			run(poop)
 			speechBuffer.Remove(pop)
 		}
 	}
@@ -294,7 +295,7 @@ func stateParser(gsi *csgsi.Game) {
 	}()
 }
 
-func say(cheese string) {
+func run(cheese string) {
 	output := fmt.Sprintf("say %s\n", cheese)
 	t.Write([]byte(output))
 }
