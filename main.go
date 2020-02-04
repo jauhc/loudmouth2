@@ -6,7 +6,6 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -30,23 +29,6 @@ import (
 	just rewrite shit tbh
 */
 
-type loudSettings struct {
-	state  bool
-	owo    bool
-	kills  bool
-	deaths bool
-	greets bool
-	clanid bool
-	clanfx bool
-}
-
-// structs default to 0 / false
-func loadSettings() loudSettings {
-	return loudSettings{
-		state: true,
-	}
-}
-
 // short for error check
 func ec(err error) {
 	if err != nil {
@@ -54,17 +36,12 @@ func ec(err error) {
 	}
 }
 
-// dum sleep wrapper because im lazy
-func sleep(ms int) {
-	time.Sleep(time.Duration(ms) * time.Millisecond)
-}
-
 // creates telnet client
 func creatListener() *telnet.Conn {
 	t, err := telnet.Dial("tcp", ":2121")
 	ec(err)
 	log.Println("dialed")
-	os.Stdin.WriteString("poop")
+	os.Stdin.WriteString("poop") // what
 	return t
 }
 
@@ -72,11 +49,6 @@ func creatListener() *telnet.Conn {
 func createStateListener() *csgsi.Game {
 	game := csgsi.New(3)
 	return game
-}
-
-// telnet writer
-func consoleSend(t *telnet.Conn, s string) {
-	t.Write([]byte(s + "\n"))
 }
 
 // loop print messages
@@ -89,62 +61,28 @@ func listenerLoop(t *telnet.Conn) {
 	}
 }
 
-// check if given gun IS a gun
-func isGun(gun *csgsi.Weapon) bool {
-	// taser returns as ""
-	if gun != nil {
-
-		w := strings.ToLower(gun.Type)
-		switch w {
-		case "pistol":
-			return true
-		case "rifle":
-			return true
-		case "sniperrifle":
-			return true
-		case "submachine gun":
-			return true
-		case "machine gun":
-			return true
-		case "shotgun":
-			return true
-		default:
-			return false
-		}
-	}
-	return false
-}
-
-// forked a repo just to export structs lole
-// gets given player's active weapon
-func getActiveGun(gsi *csgsi.State) *csgsi.Weapon {
-	for w := range gsi.Player.Weapons {
-		if gsi.Player.Weapons[w].State == "active" {
-			return gsi.Player.Weapons[w]
-		}
-	}
-	return nil
-}
-
 func ammoWarning(state *csgsi.State) {
 	w := getActiveGun(state)
 	if isGun(w) {
 		if float32(w.Ammo_clip)/float32(w.Ammo_clip_max) < 0.3 &&
 			w.Ammo_clip_max > 1 {
-			// make check if we want this on or not
-			beep.Call(80, 168)
+			if settings.Config.Ammowarn {
+				beep.Call(80, 168)
+			}
 		}
 	}
 }
 
 // DONT READ THIS
 func killCheck(state *csgsi.State) {
+	// why does it check currently spectating's stats
 	if state.Previously != nil {
 		if state.Previously.Player != nil {
 			if state.Previously.Player.Match_stats != nil {
 				// i feel like im missing something very important
 				if state.Previously.Player.Match_stats.Kills < state.Player.Match_stats.Kills {
-					speechBuffer.PushBack(tellKill(state))
+					//speechBuffer.PushBack(tellKill(state))
+					run("enemydown")
 					return
 				}
 			}
@@ -161,6 +99,7 @@ func deathCheck(state *csgsi.State) {
 				if state.Previously.Player.Match_stats.Deaths < state.Player.Match_stats.Deaths &&
 					state.Previously.Player.Match_stats.Deaths > 0 {
 					log.Println("DETH")
+					speechBuffer.PushBack(tellDeath(state))
 					// TODO add to list instead
 					return
 				}
@@ -209,6 +148,7 @@ func tellKill(state *csgsi.State) string {
 
 	picked := cheese[rand.Intn(len(cheese))]
 
+	return "bazinga\nenemydown"
 	if rand.Float32() > 0.6 {
 		return fmt.Sprintf("%s %s\nenemydown", picked, postfix[rand.Intn(len(postfix))])
 	}
@@ -236,40 +176,50 @@ func tellDeath(state *csgsi.State) string {
 			"fricking tickrate",
 			"omg 64 tick"}
 	}
-	return cheese[rand.Intn(len(cheese))]
+	// return cheese[rand.Intn(len(cheese))]
+	_ = cheese
+	return "oh no"
 }
 
 // could be cleaner
 func clanTicker() {
-	fxState := true // true fowards, false backwards
+	output := fmt.Sprintf("cl_clanid 0")
 	clanList := []int{7670261, 7670266, 7670268, 7670273, 7670276, 7670621, 7670634, 7670641, 7670647}
-	clanIdx := 0
 	for range clanTimer.C {
-		if !settings.clanid {
+		if !settings.Config.Clanid {
 			return
 		}
-		if !settings.clanfx {
+		if !settings.Config.Clanfx {
 			if clanIdx >= len(clanList) {
 				clanIdx = 0
 			}
+			output = fmt.Sprintf("cl_clanid %d", clanList[clanIdx])
 			clanIdx++
-		} else if settings.clanfx {
+		} else if settings.Config.Clanfx {
 			if clanIdx == 0 {
 				fxState = true
 			} else if clanIdx+1 >= len(clanList) {
 				fxState = false
 			}
 			if fxState {
+				output = fmt.Sprintf("cl_clanid %d", clanList[clanIdx])
+				clanIdx++
 				// cl_clanid clanList[clanIdx++]
 			} else if !fxState {
+				output = fmt.Sprintf("cl_clanid %d", clanList[clanIdx])
+				clanIdx--
 				// cl_clanid clanList[clanIdx--]
 			}
 		}
-
+		run(output)
 	}
 }
 
 func speechTicker() {
+	// TODO
+	// make an instant trigger then check if buffer > 0 and go here
+	// or; make a 1 sec timer which toggles bool whenever buffer needed
+	// and fire said timer when sent message with no buffer
 	for range speechTimer.C {
 		if speechBuffer.Len() > 0 {
 			pop := speechBuffer.Front()
@@ -283,29 +233,44 @@ func speechTicker() {
 // main logic here with game events
 func stateParser(gsi *csgsi.Game) {
 	go func() {
+		log.Println("starting parse..")
+		// go speechTicker()
+		go clanTicker()
 		for state := range gsi.Channel {
 			if state.Round.Phase == "live" || 1 == 1 {
-				// log.Println("live")
-				//TODO settings checks
-				ammoWarning(&state) // warms when ammo is low :)
-				killCheck(&state)
-				deathCheck(&state)
+
+				// local player check
+				if state.Player.SteamId == settings.User {
+					// log.Println("live")
+					//TODO settings checks
+					ammoWarning(&state) // warms when ammo is low :)
+					if settings.Config.Kills {
+						killCheck(&state)
+					}
+					if settings.Config.Deaths {
+						deathCheck(&state)
+					}
+				}
 			}
 		}
 	}()
 }
 
 func run(cheese string) {
-	output := fmt.Sprintf("say %s\n", cheese)
+	output := fmt.Sprintf("%s\n", cheese)
 	t.Write([]byte(output))
 }
 
 const ()
 
 var (
+	// clan shit
+	fxState = true // true fowards, false backwards
+	clanIdx = 0
+
 	// tickers (timers) to handle spamming
 	speechTimer = time.NewTicker(900 * time.Millisecond)
-	clanTimer   = time.NewTicker(400 * time.Millisecond)
+	clanTimer   = time.NewTicker(500 * time.Millisecond)
 
 	speechBuffer = list.New()
 
@@ -314,7 +279,7 @@ var (
 	stateWait sync.Once
 
 	t        = creatListener()
-	settings = loadSettings()
+	settings = readConfig("loud.json")
 )
 
 func init() {
@@ -330,8 +295,10 @@ func main() {
 	go listenerLoop(t) // thread for listening to rcon
 	log.Println("Console connected!")
 	gsi := createStateListener()
+	sleep(500)
 	log.Println("Listener created!")
 	stateParser(gsi)
+
 	gsi.Listen(":1489")
 	log.Println("----END----")
 }

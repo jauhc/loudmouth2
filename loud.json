@@ -1,0 +1,13 @@
+{
+    "user": "76561198002017712",
+    "config": {
+        "state": true,
+        "clanid": true,
+        "clanfx": true,
+        "owo": true,
+        "kills": false,
+        "deaths": false,
+        "greets": false,
+        "ammowarn": true
+    }
+}
