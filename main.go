@@ -111,6 +111,7 @@ func stateParser(gsi *csgsi.Game) {
 	go func() {
 		log.Println("starting parse..")
 		createTimers()
+		createConsoleCommands()
 		for state := range gsi.Channel {
 			if state.Round.Phase == "live" && isLocalPlayer(&state) {
 

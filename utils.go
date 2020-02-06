@@ -2,10 +2,9 @@ package main
 
 import (
 	"container/list"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
 	"sync"
@@ -15,29 +14,6 @@ import (
 	"github.com/jauhc/go-csgsi"
 	"github.com/ziutek/telnet"
 )
-
-// LoudSettings represents root level config: user, configs
-type LoudSettings struct {
-	User   string     `json:"user"` // your steamcommunity id
-	Pass   string     `json:"pass"` // console connection password, same as -netconpassword
-	Config LoudConfig `json:"config"`
-}
-
-// password is static until i can figure out how to automate this
-// shit without forcing this tool to be a csgo launcher
-
-// LoudConfig contains settings hardcoded until UI support?
-type LoudConfig struct {
-	State     bool `json:"state"`
-	Clanid    bool `json:"clanid"`
-	Clanfx    bool `json:"clanfx"`
-	Owo       bool `json:"owo"`
-	Kills     bool `json:"kills"`
-	Deaths    bool `json:"deaths"`
-	Greets    bool `json:"greets"`
-	Ammowarn  bool `json:"ammowarn"`
-	Radiospam bool `json:"radiospam"`
-}
 
 const (
 	configFile = "loud.json"
@@ -59,8 +35,9 @@ var (
 	beep      = syscall.MustLoadDLL("Kernel32.dll").MustFindProc("Beep")
 	stateWait sync.Once
 
-	t        = creatListener()
-	settings = readConfig(configFile)
+	t            = creatListener()
+	settings     = readConfig(configFile)
+	terribleHash = generateTerribleHash(17)
 )
 
 func createTimers() {
@@ -68,26 +45,6 @@ func createTimers() {
 	go radioTicker()
 	// go speechTicker()
 	go clanTicker()
-}
-
-// read and apply user, configs etc
-func readConfig(file string) LoudSettings {
-	var settings LoudSettings
-	settingsFile, err := os.Open(file)
-	ec(err)
-	defer settingsFile.Close()
-	byteVal, err := ioutil.ReadAll(settingsFile)
-	ec(err)
-	json.Unmarshal(byteVal, &settings)
-	return settings
-}
-
-// save current config
-func saveConfig() {
-	data, err := json.MarshalIndent(settings, "", " ")
-	ec(err)
-	err = ioutil.WriteFile(configFile, data, 0644)
-	ec(err)
 }
 
 // dum sleep wrapper because im lazy
@@ -107,7 +64,9 @@ func listenerLoop(t *telnet.Conn) {
 	buf := make([]byte, 1024)
 	for {
 		n, err := t.Read(buf)
-		os.Stdout.Write(buf[:n])
+		data := buf[:n]
+		os.Stdout.Write(data)
+		go consoleParse(data)
 		ec(err)
 	}
 }
@@ -214,7 +173,22 @@ func getActiveGun(gsi *csgsi.State) *csgsi.Weapon {
 	return nil
 }
 
-// create console commands / aliases
-func consoleCommands() {
-	run("alias poop_radio getout")
+func consoleParse(data []byte) {
+	toParse := string(data)
+	if len(toParse) > 0 {
+		hashIdx := strings.Index(toParse, terribleHash)
+		if hashIdx > -1 {
+			checkCvars(strings.Split(toParse[:hashIdx], " "))
+		}
+	}
+}
+
+func generateTerribleHash(howlong int) string {
+	// charset := "iIl1|!o0OS5B8"
+	charset := "iIl1|"
+	b := make([]byte, howlong)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
 }
