@@ -9,6 +9,7 @@
         "kills": false,
         "deaths": false,
         "greets": false,
-        "ammowarn": true
+        "ammowarn": true,
+        "radiospam": false
     }
 }

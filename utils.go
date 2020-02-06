@@ -28,17 +28,20 @@ type LoudSettings struct {
 
 // LoudConfig contains settings hardcoded until UI support?
 type LoudConfig struct {
-	State    bool `json:"state"`
-	Clanid   bool `json:"clanid"`
-	Clanfx   bool `json:"clanfx"`
-	Owo      bool `json:"owo"`
-	Kills    bool `json:"kills"`
-	Deaths   bool `json:"deaths"`
-	Greets   bool `json:"greets"`
-	Ammowarn bool `json:"ammowarn"`
+	State     bool `json:"state"`
+	Clanid    bool `json:"clanid"`
+	Clanfx    bool `json:"clanfx"`
+	Owo       bool `json:"owo"`
+	Kills     bool `json:"kills"`
+	Deaths    bool `json:"deaths"`
+	Greets    bool `json:"greets"`
+	Ammowarn  bool `json:"ammowarn"`
+	Radiospam bool `json:"radiospam"`
 }
 
-const ()
+const (
+	configFile = "loud.json"
+)
 
 var (
 	// clan shit
@@ -48,6 +51,7 @@ var (
 	// tickers (timers) to handle spamming
 	speechTimer = time.NewTicker(900 * time.Millisecond)
 	clanTimer   = time.NewTicker(500 * time.Millisecond)
+	radioTimer  = time.NewTicker(800 * time.Millisecond)
 
 	speechBuffer = list.New()
 
@@ -56,8 +60,15 @@ var (
 	stateWait sync.Once
 
 	t        = creatListener()
-	settings = readConfig("loud.json")
+	settings = readConfig(configFile)
 )
+
+func createTimers() {
+
+	go radioTicker()
+	// go speechTicker()
+	go clanTicker()
+}
 
 // read and apply user, configs etc
 func readConfig(file string) LoudSettings {
@@ -69,6 +80,14 @@ func readConfig(file string) LoudSettings {
 	ec(err)
 	json.Unmarshal(byteVal, &settings)
 	return settings
+}
+
+// save current config
+func saveConfig() {
+	data, err := json.MarshalIndent(settings, "", " ")
+	ec(err)
+	err = ioutil.WriteFile(configFile, data, 0644)
+	ec(err)
 }
 
 // dum sleep wrapper because im lazy
@@ -93,13 +112,21 @@ func listenerLoop(t *telnet.Conn) {
 	}
 }
 
+// not 100% sure if this works but
+func say(cheese string) {
+	speechBuffer.PushBack(cheese)
+	if speechBuffer.Len() == 1 { // if just one, else let ticker handle it
+		pop := speechBuffer.Front()
+		output := fmt.Sprintf("say %s", pop.Value)
+		run(output)
+		speechBuffer.Remove(pop)
+	}
+}
+
+// timer for chat output
 func speechTicker() {
-	// TODO
-	// make an instant trigger then check if buffer > 0 and go here
-	// or; make a 1 sec timer which toggles bool whenever buffer needed
-	// and fire said timer when sent message with no buffer
 	for range speechTimer.C {
-		if speechBuffer.Len() > 0 {
+		if speechBuffer.Len() > 1 {
 			pop := speechBuffer.Front()
 			poop := fmt.Sprintf("say %s", pop.Value)
 			run(poop)
@@ -110,8 +137,13 @@ func speechTicker() {
 
 // creates telnet client
 func creatListener() *telnet.Conn {
+start:
 	t, err := telnet.Dial("tcp", ":2121")
-	ec(err)
+	if err != nil {
+		// no clue how to retry so we make this
+		log.Println(err)
+		goto start
+	}
 	log.Println("dialed")
 	os.Stdin.WriteString("poop") // what
 	return t
@@ -123,8 +155,21 @@ func createStateListener() *csgsi.Game {
 	return game
 }
 
+// dumb wrapper for checking state structure integrity because i cant think of a better way
+func stateOK(state *csgsi.State) bool {
+	if state.Previously != nil {
+		if state.Previously.Player != nil {
+			if state.Previously.Player.Match_stats != nil {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // run console command
 func run(cheese string) {
+	// fmt.Println("> " + cheese)
 	t.Write([]byte(cheese + "\n"))
 }
 
@@ -167,4 +212,9 @@ func getActiveGun(gsi *csgsi.State) *csgsi.Weapon {
 		}
 	}
 	return nil
+}
+
+// create console commands / aliases
+func consoleCommands() {
+	run("alias poop_radio getout")
 }

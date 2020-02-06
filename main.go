@@ -37,35 +37,24 @@ func ammoWarning(state *csgsi.State) {
 
 // DONT READ THIS
 func killCheck(state *csgsi.State) {
-	// why does it check currently spectating's stats
-	if state.Previously != nil {
-		if state.Previously.Player != nil {
-			if state.Previously.Player.Match_stats != nil {
-				// i feel like im missing something very important
-				if state.Previously.Player.Match_stats.Kills < state.Player.Match_stats.Kills {
-					//speechBuffer.PushBack(tellKill(state))
-					run("enemydown")
-					return
-				}
-			}
+	if stateOK(state) {
+		if state.Previously.Player.Match_stats.Kills < state.Player.Match_stats.Kills {
+			//speechBuffer.PushBack(tellKill(state))
+			run("enemydown")
+			return
 		}
 	}
 }
 
 // dont read this either thanks
 func deathCheck(state *csgsi.State) {
-	if state.Previously != nil {
-		if state.Previously.Player != nil {
-			if state.Previously.Player.Match_stats != nil {
-				// i feel like im missing something very important
-				if state.Previously.Player.Match_stats.Deaths < state.Player.Match_stats.Deaths &&
-					state.Previously.Player.Match_stats.Deaths > 0 {
-					log.Println("DETH")
-					// speechBuffer.PushBack(tellDeath(state))
-					// TODO add to list instead
-					return
-				}
-			}
+	if stateOK(state) {
+		if state.Previously.Player.Match_stats.Deaths < state.Player.Match_stats.Deaths &&
+			state.Previously.Player.Match_stats.Deaths > 0 {
+			log.Println("DETH")
+			// speechBuffer.PushBack(tellDeath(state))
+			// TODO add to list instead
+			return
 		}
 	}
 }
@@ -76,6 +65,12 @@ func clanTicker() {
 	clanList := []int{7670261, 7670266, 7670268, 7670273, 7670276, 7670621, 7670634, 7670641, 7670647}
 	for range clanTimer.C {
 		if !settings.Config.Clanid && !settings.Config.Clanfx {
+			if clanIdx > 0 {
+				// run this once to clear clanid after disabling
+				clanIdx = -1
+				fxState = true
+				run("cl_clanid 0")
+			}
 			return
 		}
 		if !settings.Config.Clanfx {
@@ -102,12 +97,20 @@ func clanTicker() {
 	}
 }
 
+// radio spammer
+func radioTicker() {
+	for range radioTimer.C {
+		if settings.Config.Radiospam {
+			run("poop_radio")
+		}
+	}
+}
+
 // main logic here with game events
 func stateParser(gsi *csgsi.Game) {
 	go func() {
 		log.Println("starting parse..")
-		// go speechTicker()
-		go clanTicker()
+		createTimers()
 		for state := range gsi.Channel {
 			if state.Round.Phase == "live" && isLocalPlayer(&state) {
 
