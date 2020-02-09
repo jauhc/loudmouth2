@@ -37,7 +37,7 @@ var (
 
 	t            = creatListener()
 	settings     = readConfig(configFile)
-	terribleHash = generateTerribleHash(17)
+	terribleHash = generateTerribleHash(9)
 )
 
 func createTimers() {
@@ -61,12 +61,13 @@ func ec(err error) {
 
 // loop print messages
 func listenerLoop(t *telnet.Conn) {
-	buf := make([]byte, 1024)
+	buf := make([]byte, 2048)
 	for {
+		// why the fuck does it send out first word seperately
 		n, err := t.Read(buf)
-		data := buf[:n]
+		data := buf[0:n]
 		os.Stdout.Write(data)
-		go consoleParse(data)
+		consoleParse(data)
 		ec(err)
 	}
 }

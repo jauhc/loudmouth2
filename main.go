@@ -101,7 +101,7 @@ func clanTicker() {
 func radioTicker() {
 	for range radioTimer.C {
 		if settings.Config.Radiospam {
-			run("poop_radio")
+			run("ohn")
 		}
 	}
 }
@@ -113,16 +113,19 @@ func stateParser(gsi *csgsi.Game) {
 		createTimers()
 		createConsoleCommands()
 		for state := range gsi.Channel {
-			if state.Round.Phase == "live" && isLocalPlayer(&state) {
+			if stateOK(&state) {
 
-				if settings.Config.Ammowarn {
-					ammoWarning(&state) // warms when ammo is low :)
-				}
-				if settings.Config.Kills {
-					killCheck(&state)
-				}
-				if settings.Config.Deaths {
-					deathCheck(&state)
+				if state.Round.Phase == "live" && isLocalPlayer(&state) {
+
+					if settings.Config.Ammowarn {
+						ammoWarning(&state) // warms when ammo is low :)
+					}
+					if settings.Config.Kills {
+						killCheck(&state)
+					}
+					if settings.Config.Deaths {
+						deathCheck(&state)
+					}
 				}
 			}
 		}
@@ -139,11 +142,11 @@ func init() {
 
 func main() {
 	log.Println("---START---")
-	go listenerLoop(t) // thread for listening to rcon
 	run("PASS " + settings.Pass)
+	go listenerLoop(t) // thread for listening to rcon
 	log.Println("Console connected!")
 	gsi := createStateListener()
-	sleep(500)
+	sleep(130)
 	log.Println("Listener created!")
 	stateParser(gsi)
 

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 // LoudSettings represents root level config: user, configs
@@ -53,7 +54,11 @@ func checkCvars(data []string) {
 	}
 	switch data[1] {
 	case "LIST":
-		run("echo way too lazy to do this rn bye")
+		raw := fmt.Sprintf("%+v", settings.Config)
+		list := strings.Split(raw, " ")
+		for index := 0; index < len(list); index++ {
+			run(fmt.Sprintf("echo %v \n", list[index]))
+		}
 		break
 
 	case "STATE":
@@ -78,7 +83,7 @@ func checkCvars(data []string) {
 		break
 
 	case "DMGREPORT":
-		// unimplemented
+		run("echo #unimplemented")
 		break
 
 	case "KILLS":
@@ -86,7 +91,7 @@ func checkCvars(data []string) {
 		break
 
 	case "KILLSRADIO":
-		// unimplemented
+		run("echo #unimplemented")
 		break
 
 	case "DETH":
@@ -101,6 +106,7 @@ func checkCvars(data []string) {
 		run("echo somehow you broke the settings?")
 		break
 	}
+	saveConfig()
 }
 
 // read and apply user, configs etc
@@ -126,59 +132,60 @@ func saveConfig() {
 // create console commands / aliases
 func createConsoleCommands() {
 	// christ the sprintf makes this awful to read but its a clever 1 liner
-	run(fmt.Sprintf("alias loud  \"echo 0 LIST %s\"", terribleHash))
-	run("alias poop_radio getout")
+	run(fmt.Sprintf("alias loud  \"echo set 0 LIST %s\"", terribleHash))
+	run("alias ohn getout")
 
 	run("setinfo loud_state_o \"\"")
-	run(fmt.Sprintf("alias loud_state_off \"echo 0 STATE %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_state_on \"echo 1 STATE %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_state_off \"echo set 0 STATE %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_state_on \"echo set 1 STATE %s\"", terribleHash))
 	sleep(50)
 
 	run("setinfo loud_owo_o \"\"")
-	run(fmt.Sprintf("alias loud_owo_off \"echo 0 OWO %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_owo_on \"echo 1 OWO %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_owo_off \"echo set 0 OWO %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_owo_on \"echo set 1 OWO %s\"", terribleHash))
 	sleep(50)
 
 	run("setinfo loud_radiospam_o \"\"")
-	run(fmt.Sprintf("alias loud_radiospam_off \"echo 0 RADIOSPAM %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_radiospam_on \"echo 1 RADIOSPAM %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_radiospam_off \"echo set 0 RADIOSPAM %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_radiospam_on \"echo set 1 RADIOSPAM %s\"", terribleHash))
 	sleep(50)
 
 	run("setinfo loud_dmgreport_o \"\"")
-	run(fmt.Sprintf("alias loud_dmgreport_off \"echo 0 DMGREPORT %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_dmgreport_on \"echo 1 DMGREPORT %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_dmgreport_off \"echo set 0 DMGREPORT %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_dmgreport_on \"echo set 1 DMGREPORT %s\"", terribleHash))
 	sleep(50)
 
 	run("setinfo loud_kills_o \"\"")
-	run(fmt.Sprintf("alias loud_kills_off \"echo 0 KILLS %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_kills_on \"echo 1 KILLS %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_kills_off \"echo set 0 KILLS %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_kills_on \"echo set 1 KILLS %s\"", terribleHash))
 	sleep(50)
 
 	run("setinfo loud_killradio_o \"\"")
-	run(fmt.Sprintf("alias loud_killradio_off \"echo 0 KILLSRADIO %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_killradio_on \"echo 1 KILLSRADIO %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_killradio_off \"echo set 0 KILLSRADIO %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_killradio_on \"echo set 1 KILLSRADIO %s\"", terribleHash))
 	sleep(50)
 
 	run("setinfo loud_death_o \"\"")
-	run(fmt.Sprintf("alias loud_death_off \"echo 0 DETH %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_death_on \"echo 1 DETH %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_death_off \"echo set 0 DETH %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_death_on \"echo set 1 DETH %s\"", terribleHash))
 	sleep(50)
 
 	run("setinfo loud_greet_o \"\"")
-	run(fmt.Sprintf("alias loud_greet_off \"echo 0 GREET %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_greet_on \"echo 1 GREET %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_greet_off \"echo set 0 GREET %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_greet_on \"echo set 1 GREET %s\"", terribleHash))
 	sleep(50)
 
 	run("setinfo loud_clan_o \"\"")
-	run(fmt.Sprintf("alias loud_clan_off \"echo 0 CLAN %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_clan_on \"echo 1 CLAN %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_clan_off \"echo set 0 CLAN %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_clan_on \"echo set 1 CLAN %s\"", terribleHash))
 	sleep(50)
 
 	run("setinfo loud_clan_wave_o \"\"")
-	run(fmt.Sprintf("alias loud_clan_wave_off \"echo 0 CLANFX %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_clan_wave_on \"echo 1 CLANFX %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_clan_wave_off \"echo set 0 CLANFX %s\"", terribleHash))
+	run(fmt.Sprintf("alias loud_clan_wave_on \"echo set 1 CLANFX %s\"", terribleHash))
 	sleep(50)
 
 	run("echo Commands created!")
-
+	sleep(50)
+	run("loud")
 }
