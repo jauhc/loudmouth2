@@ -17,6 +17,8 @@ import (
 
 const (
 	configFile = "loud.json"
+	msgCode    = "‎ : " // DONT TOUCH OR WE ALL DIE
+	uniqueCode = "‎"    // DONT TOUCH OR WE ALL DIE
 )
 
 var (
@@ -73,11 +75,18 @@ func listenerLoop(t *telnet.Conn) {
 }
 
 // not 100% sure if this works but
-func say(cheese string) {
+func say(cheese string, isTeam ...bool) {
+	var output string
 	speechBuffer.PushBack(cheese)
 	if speechBuffer.Len() == 1 { // if just one, else let ticker handle it
 		pop := speechBuffer.Front()
-		output := fmt.Sprintf("say %s", pop.Value)
+		if len(isTeam) > 0 {
+			if isTeam[0] {
+				output = fmt.Sprintf("say_team %s", pop.Value)
+			}
+		} else {
+			output = fmt.Sprintf("say %s", pop.Value)
+		}
 		run(output)
 		speechBuffer.Remove(pop)
 	}
@@ -112,12 +121,15 @@ start:
 // creates gsi listener
 func createStateListener() *csgsi.Game {
 	game := csgsi.New(3)
-	return game
+	if game != nil {
+		return game
+	}
+	return nil
 }
 
 // dumb wrapper for checking state structure integrity because i cant think of a better way
 func stateOK(state *csgsi.State) bool {
-	if state.Previously != nil {
+	if state.Previously != nil && state.Round != nil {
 		if state.Previously.Player != nil {
 			if state.Previously.Player.Match_stats != nil {
 				return true
@@ -175,13 +187,76 @@ func getActiveGun(gsi *csgsi.State) *csgsi.Weapon {
 }
 
 func consoleParse(data []byte) {
+	// TODO owos and other stupid shit
 	toParse := string(data)
 	if len(toParse) > 0 {
 		hashIdx := strings.Index(toParse, terribleHash)
 		if hashIdx > -1 {
 			checkCvars(strings.Split(toParse[:hashIdx], " "))
 		}
+		// find stupid symbol -> parse chat message
+		if strings.Index(toParse, uniqueCode) > -1 {
+			figureOutCommand(toParse)
+		}
 	}
+}
+
+func figureOutCommand(msg string) {
+	message, sender, isTeam := parseChat(msg)
+	println(sender + " said " + message)
+	/*
+		if strings.Index(message, "owo") > -1 || strings.Index(message, "uwu") > -1 {
+			say(getOwo(), isTeam)
+		} // commented because i dont trust my own code
+	*/
+	if findOccurrence(message, "owo", "uwu") {
+		say(getOwo(), isTeam)
+	}
+}
+
+func parseChat(msg string) (message string, sender string, teamchat bool) {
+	isTeam := false
+	var caller string
+	var output string
+	codeIdx := strings.Index(msg, uniqueCode)
+	if codeIdx > -1 {
+		if (strings.Index(msg, "Terrorist)")) > -1 {
+			isTeam = true
+		}
+		replacer := strings.NewReplacer(uniqueCode, "", "*DEAD*", "", "(Terrorist) ", "", "(Counter-Terrorist) ", "")
+		replaced := replacer.Replace(msg)
+
+		locationMarker := strings.LastIndex(replaced, "@") // fix
+		if locationMarker > -1 {
+			caller = strings.TrimSpace(replaced[:locationMarker])
+		} else {
+			nameEnd := strings.Index(replaced, " : ")
+			caller = strings.TrimSpace(replaced[:nameEnd])
+		}
+		// end of SENDER get
+		// start of MSG get
+		msgStart := strings.Index(replaced, " : ")
+		if msgStart > -1 {
+			output = strings.TrimSpace(replaced[msgStart+3:])
+		} else {
+			println("bad msg")
+			return
+		}
+		if len(caller) < 1 {
+			caller = "<empty>"
+		}
+		return output, caller, isTeam
+	}
+	return "", "", false
+}
+
+func findOccurrence(s string, of ...string) bool {
+	for t := range of {
+		if strings.Index(s, of[t]) > -1 {
+			return true
+		}
+	}
+	return false
 }
 
 func generateTerribleHash(howlong int) string {

@@ -1,15 +1,15 @@
 {
-    "user": "76561198002017712",
-    "pass": "anim#",
-    "config": {
-        "state": true,
-        "clanid": true,
-        "clanfx": true,
-        "owo": true,
-        "kills": false,
-        "deaths": false,
-        "greets": false,
-        "ammowarn": true,
-        "radiospam": false
-    }
+ "user": "76561198002017712",
+ "pass": "anim#",
+ "config": {
+  "state": true,
+  "clanid": true,
+  "clanfx": true,
+  "owo": false,
+  "kills": false,
+  "deaths": false,
+  "greets": false,
+  "ammowarn": true,
+  "radiospam": false
+ }
 }

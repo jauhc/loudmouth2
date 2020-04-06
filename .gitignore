@@ -3,3 +3,6 @@ run.cmd
 /.vscode
 *.code-workspace
 test.go
+web/res/config.js
+/web
+panel.go

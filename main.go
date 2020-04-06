@@ -53,7 +53,6 @@ func deathCheck(state *csgsi.State) {
 			state.Previously.Player.Match_stats.Deaths > 0 {
 			log.Println("DETH")
 			// speechBuffer.PushBack(tellDeath(state))
-			// TODO add to list instead
 			return
 		}
 	}
@@ -114,9 +113,7 @@ func stateParser(gsi *csgsi.Game) {
 		createConsoleCommands()
 		for state := range gsi.Channel {
 			if stateOK(&state) {
-
 				if state.Round.Phase == "live" && isLocalPlayer(&state) {
-
 					if settings.Config.Ammowarn {
 						ammoWarning(&state) // warms when ammo is low :)
 					}
