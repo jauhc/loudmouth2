@@ -1,6 +1,7 @@
 *.exe
 run.cmd
 /.vscode
+/.vs
 *.code-workspace
 test.go
 web/res/config.js

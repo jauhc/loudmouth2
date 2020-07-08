@@ -33,7 +33,8 @@ var (
 
 	speechBuffer = list.New()
 
-	// beeping for low ammo warning //TODO add OS check)
+	// beeping for low ammo warning
+	// no need to worry about unix since it (the game) crashes on connection
 	beep      = syscall.MustLoadDLL("Kernel32.dll").MustFindProc("Beep")
 	stateWait sync.Once
 
@@ -196,7 +197,7 @@ func consoleParse(data []byte) {
 		}
 		// find stupid symbol -> parse chat message
 		if strings.Index(toParse, uniqueCode) > -1 {
-			figureOutCommand(toParse)
+			// figureOutCommand(toParse)
 		}
 	}
 }
