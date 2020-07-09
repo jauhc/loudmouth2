@@ -36,10 +36,10 @@ jobs:
     - name: Test
       run: go test -v .
 
-    - name: Remove previous release
-      uses: actions/delete-package-versions@v1
+    - name: Delete
+      uses: ame-yu/action-delete-latest-release@v2
       with:
-        package-name: 'latest release'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
       
     - name: Create Release
       id: create_release
