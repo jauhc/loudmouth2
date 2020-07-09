@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net"
 	"os"
 	"strings"
 	"sync"
@@ -12,7 +13,6 @@ import (
 	"time"
 
 	"github.com/jauhc/go-csgsi"
-	"github.com/ziutek/telnet"
 )
 
 const (
@@ -38,7 +38,7 @@ var (
 	beep      = syscall.MustLoadDLL("Kernel32.dll").MustFindProc("Beep")
 	stateWait sync.Once
 
-	t            = creatListener()
+	t            = creatListener(":2121")
 	settings     = readConfig(configFile)
 	terribleHash = generateTerribleHash(9)
 )
@@ -63,15 +63,23 @@ func ec(err error) {
 }
 
 // loop print messages
-func listenerLoop(t *telnet.Conn) {
-	buf := make([]byte, 2048)
+func listenerLoop(sock net.Conn) {
 	for {
-		// why the fuck does it send out first word seperately
-		n, err := t.Read(buf)
-		data := buf[0:n]
-		os.Stdout.Write(data)
-		consoleParse(data)
+		recvData := make([]byte, 256)
+		n, err := sock.Read(recvData)
+
 		ec(err)
+		if n > 0 {
+			out := string(recvData)
+			idx := strings.IndexByte(out, '\x00')
+			if idx > -1 {
+				os.Stdout.Write(recvData[:idx])
+				consoleParse(out)
+			} else {
+				os.Stdout.Write(recvData)
+				consoleParse(out)
+			}
+		}
 	}
 }
 
@@ -105,18 +113,16 @@ func speechTicker() {
 	}
 }
 
-// creates telnet client
-func creatListener() *telnet.Conn {
+// create socket
+func creatListener(addr string) net.Conn {
 start:
-	t, err := telnet.Dial("tcp", ":2121")
+	sock, err := net.Dial("tcp", addr)
 	if err != nil {
-		// no clue how to retry so we make this
 		log.Println(err)
 		goto start
 	}
 	log.Println("dialed")
-	os.Stdin.WriteString("poop") // what
-	return t
+	return sock
 }
 
 // creates gsi listener
@@ -187,18 +193,15 @@ func getActiveGun(gsi *csgsi.State) *csgsi.Weapon {
 	return nil
 }
 
-func consoleParse(data []byte) {
+func consoleParse(toParse string) {
 	// TODO owos and other stupid shit
-	toParse := string(data)
-	if len(toParse) > 0 {
-		hashIdx := strings.Index(toParse, terribleHash)
-		if hashIdx > -1 {
-			checkCvars(strings.Split(toParse[:hashIdx], " "))
-		}
-		// find stupid symbol -> parse chat message
-		if strings.Index(toParse, uniqueCode) > -1 {
-			// figureOutCommand(toParse)
-		}
+	hashIdx := strings.Index(toParse, terribleHash)
+	if hashIdx > -1 {
+		checkCvars(strings.Split(toParse[:hashIdx], " "))
+	}
+	// find stupid symbol -> parse chat message
+	if strings.Index(toParse, uniqueCode) > -1 {
+		// figureOutCommand(toParse)
 	}
 }
 
