@@ -39,7 +39,7 @@ jobs:
     - name: Remove previous release
       uses: actions/delete-package-versions@v1
       with:
-        package-name: 'latest'
+        package-name: 'latest release'
       
     - name: Create Release
       id: create_release
