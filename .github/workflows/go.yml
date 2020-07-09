@@ -47,7 +47,7 @@ jobs:
         release_name: latest release
         body: |
           Changes in this Release
-          - test build :)
+          - latest build, probably broken lole
         draft: false
         prerelease: true
 

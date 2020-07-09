@@ -119,7 +119,7 @@ start:
 	sock, err := net.Dial("tcp", addr)
 	if err != nil {
 		log.Println(err)
-		goto start
+		goto start // pee pee poo poo lol
 	}
 	log.Println("dialed")
 	return sock

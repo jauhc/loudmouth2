@@ -11,3 +11,6 @@ root/
 ├── cheese.go ──────> the cheesy chat message functions are here
 ├── loud.json ──────> JSON formatted settings to load\
 ```
+
+## "i somehow ended up here, what is this?"
+in short: a csgo spambot
