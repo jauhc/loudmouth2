@@ -48,3 +48,5 @@ jobs:
         files: loudmouth2.exe
         name: latest
         tag_name: latest-release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
