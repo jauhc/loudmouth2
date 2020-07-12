@@ -49,6 +49,7 @@ TODO reduce steps
 
 func checkCvars(data []string) {
 	fmt.Println(data)
+	data[1] = strings.ToUpper(data[1])
 	set := false
 	if data[0] == "1" {
 		set = true
@@ -141,9 +142,11 @@ func createConsoleCommands() {
 	list := strings.Split(col, ":")
 	for index := 0; index < len(list); index += 2 {
 		//println(fmt.Sprintf("%v = %v", list[index], list[index+1]))
-		run(fmt.Sprintf("setinfo loud_%s_o \"\"", list[index]))
-		run(fmt.Sprintf("alias loud_%[1]s_off \"echo set 0 %[1]s %[2]s\"", list[index], terribleHash))
-		run(fmt.Sprintf("alias loud_%[1]s_on \"echo set 1 %[1]s %[2]s\"", list[index], terribleHash))
+		run(fmt.Sprintf("setinfo loud_%s_o \"\"", strings.ToLower(list[index])))
+		run(fmt.Sprintf("alias loud_%s_off \"echo set 0 %s %s\"",
+			strings.ToLower(list[index]), strings.ToUpper(list[index]), terribleHash))
+		run(fmt.Sprintf("alias loud_%s_on \"echo set 1 %s %s\"",
+			strings.ToLower(list[index]), strings.ToUpper(list[index]), terribleHash))
 		sleepn(30, 15)
 	}
 
