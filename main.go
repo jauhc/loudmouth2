@@ -15,7 +15,6 @@ import (
 \\------------------------//
 	TODO
 		! launch params
-		% UI
 		!% logics
 		? location parser with m_szLastPlaceName and "getpos"
 		! error checks

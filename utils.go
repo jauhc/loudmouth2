@@ -65,6 +65,15 @@ func ec(err error) {
 	}
 }
 
+// removes all give substrs of s
+func removeAllOf(s string, r ...string) (t string) {
+	t = strings.ReplaceAll(s, r[0], "")
+	for i := 1; i < len(r); i++ {
+		t = strings.ReplaceAll(t, r[i], "")
+	}
+	return
+}
+
 // loop print messages
 func listenerLoop(sock net.Conn) {
 	for {

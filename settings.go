@@ -40,12 +40,11 @@ type LoudConfig struct {
 	READ THIS IF YOU WANT TO ADD MORE SETTINGS
 	IF ITS A SIMPLE TOGGLE ON / OFF FEATURE, ITS EASY (KIND OF)
 +---------------------------------------------------------------+
-|	1. add it to .json file following previous examples			|
-|	2. add it to struct that reads json	(LoudConfig)			|
-|	3. add to checkCvars() function to make it toggleable		|
-|	4. add an alias to it in createConsoleCommands()			|
+|	1. add it to struct that reads json	(LoudConfig)			|
+|	2. add to checkCvars() function to make it toggleable		| <-- needs to be scalable
 +---------------------------------------------------------------+
 TODO reduce steps
+	probably best to have struct as reference, then add missing ones to json
 */
 
 func checkCvars(data []string) {
@@ -56,8 +55,6 @@ func checkCvars(data []string) {
 	}
 	switch data[1] {
 	case "LIST":
-		// could remove {} from ouput..
-		// INFACT could format this better overall
 		raw := fmt.Sprintf("%+v", settings.Config)
 		list := strings.Split(raw, " ")
 		for index := 0; index < len(list); index++ {
@@ -134,59 +131,21 @@ func saveConfig() {
 
 // create console commands / aliases
 func createConsoleCommands() {
-	// christ the sprintf makes this awful to read but its a clever 1 liner
 	run(fmt.Sprintf("alias loud  \"echo set 0 LIST %s\"", terribleHash))
 	run("alias ohn getout")
 
-	run("setinfo loud_state_o \"\"")
-	run(fmt.Sprintf("alias loud_state_off \"echo set 0 STATE %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_state_on \"echo set 1 STATE %s\"", terribleHash))
-	sleepn(30, 15)
-
-	run("setinfo loud_owo_o \"\"")
-	run(fmt.Sprintf("alias loud_owo_off \"echo set 0 OWO %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_owo_on \"echo set 1 OWO %s\"", terribleHash))
-	sleepn(30, 15)
-
-	run("setinfo loud_radiospam_o \"\"")
-	run(fmt.Sprintf("alias loud_radiospam_off \"echo set 0 RADIOSPAM %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_radiospam_on \"echo set 1 RADIOSPAM %s\"", terribleHash))
-	sleepn(30, 15)
-
-	run("setinfo loud_dmgreport_o \"\"")
-	run(fmt.Sprintf("alias loud_dmgreport_off \"echo set 0 DMGREPORT %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_dmgreport_on \"echo set 1 DMGREPORT %s\"", terribleHash))
-	sleepn(30, 15)
-
-	run("setinfo loud_kills_o \"\"")
-	run(fmt.Sprintf("alias loud_kills_off \"echo set 0 KILLS %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_kills_on \"echo set 1 KILLS %s\"", terribleHash))
-	sleepn(30, 15)
-
-	run("setinfo loud_killradio_o \"\"")
-	run(fmt.Sprintf("alias loud_killradio_off \"echo set 0 KILLSRADIO %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_killradio_on \"echo set 1 KILLSRADIO %s\"", terribleHash))
-	sleepn(30, 15)
-
-	run("setinfo loud_death_o \"\"")
-	run(fmt.Sprintf("alias loud_death_off \"echo set 0 DETH %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_death_on \"echo set 1 DETH %s\"", terribleHash))
-	sleepn(30, 15)
-
-	run("setinfo loud_greet_o \"\"")
-	run(fmt.Sprintf("alias loud_greet_off \"echo set 0 GREET %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_greet_on \"echo set 1 GREET %s\"", terribleHash))
-	sleepn(30, 15)
-
-	run("setinfo loud_clan_o \"\"")
-	run(fmt.Sprintf("alias loud_clan_off \"echo set 0 CLAN %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_clan_on \"echo set 1 CLAN %s\"", terribleHash))
-	sleepn(30, 15)
-
-	run("setinfo loud_clan_wave_o \"\"")
-	run(fmt.Sprintf("alias loud_clan_wave_off \"echo set 0 CLANFX %s\"", terribleHash))
-	run(fmt.Sprintf("alias loud_clan_wave_on \"echo set 1 CLANFX %s\"", terribleHash))
-	sleepn(30, 15)
+	// parses the struct to text then gets names and throws them as aliases etc
+	raw := fmt.Sprintf("%+v", settings.Config)
+	col := strings.ReplaceAll(raw, " ", ":")
+	col = removeAllOf(col, "{", "}")
+	list := strings.Split(col, ":")
+	for index := 0; index < len(list); index += 2 {
+		//println(fmt.Sprintf("%v = %v", list[index], list[index+1]))
+		run(fmt.Sprintf("setinfo loud_%s_o \"\"", list[index]))
+		run(fmt.Sprintf("alias loud_%[1]s_off \"echo set 0 %[1]s %[2]s\"", list[index], terribleHash))
+		run(fmt.Sprintf("alias loud_%[1]s_on \"echo set 1 %[1]s %[2]s\"", list[index], terribleHash))
+		sleepn(30, 15)
+	}
 
 	run("echo Commands created!")
 	sleep(50)
