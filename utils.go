@@ -47,7 +47,15 @@ func createTimers() {
 
 // dum sleep wrapper because im lazy
 func sleep(ms int) {
-	time.Sleep(time.Duration(ms) * time.Millisecond)
+	if ms > 0 {
+		time.Sleep(time.Duration(ms) * time.Millisecond)
+	}
+}
+
+// sleep with some noise
+func sleepn(ms int, noise int) {
+	n := rand.Intn(noise)
+	time.Sleep(time.Duration(ms+n) * time.Millisecond)
 }
 
 // short for error check
