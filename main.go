@@ -59,49 +59,66 @@ func deathCheck(state *csgsi.State) {
 }
 
 // could be cleaner
-func clanTicker() {
-	output := fmt.Sprintf("cl_clanid 0")
-	clanList := []int{7670261, 7670266, 7670268, 7670273, 7670276, 7670621, 7670634, 7670641, 7670647}
-	for range clanTimer.C {
-		if !settings.Config.Clanid && !settings.Config.Clanfx {
-			if clanIdx > 0 {
-				// run this once to clear clanid after disabling
-				clanIdx = -1
-				fxState = true
-				run("cl_clanid 0")
-			}
-			return
+func gayTicker() {
+	tick := 1
+	clanList := [...]int{7670261, 7670266, 7670268, 7670273, 7670276, 7670621, 7670634, 7670641, 7670647}
+	output := fmt.Sprintf("cl_clanid 0;")
+	// clan 5
+	// radio 8
+	// speech 9
+	for range gayTimer.C {
+		if tick >= 11 {
+			tick = 1
 		}
-		if !settings.Config.Clanfx {
-			if clanIdx >= len(clanList) {
-				clanIdx = 0
-			}
-			clanIdx++
-		} else if settings.Config.Clanfx {
-			if clanIdx == 0 {
-				fxState = true
-			} else if clanIdx+1 >= len(clanList) {
-				fxState = false
-			}
-			if fxState {
-				clanIdx++
-				// cl_clanid clanList[clanIdx++]
-			} else if !fxState {
-				clanIdx--
-				// cl_clanid clanList[clanIdx--]
-			}
-		}
-		output = fmt.Sprintf("cl_clanid %d", clanList[clanIdx])
-		run(output)
-	}
-}
 
-// radio spammer
-func radioTicker() {
-	for range radioTimer.C {
-		if settings.Config.Radiospam {
-			run("ohn")
+		if tick%8 == 0 { // every 800 ms
+			if settings.Config.Radiospam {
+				run("getout")
+			}
 		}
+
+		if tick%9 == 0 {
+			if speechBuffer.Len() > 1 {
+				pop := speechBuffer.Front()
+				poop := fmt.Sprintf("say %s", pop.Value)
+				run(poop)
+				speechBuffer.Remove(pop)
+			}
+		}
+
+		if tick%5 == 0 { // every 500 ms
+			if !settings.Config.Clanid && !settings.Config.Clanfx {
+				if clanIdx > 0 {
+					// run this once to clear clanid after disabling
+					clanIdx = -1
+					fxState = true
+					run("cl_clanid 0")
+				}
+				return
+			}
+			if !settings.Config.Clanfx {
+				if clanIdx >= len(clanList) {
+					clanIdx = 0
+				}
+				clanIdx++
+			} else if settings.Config.Clanfx {
+				if clanIdx == 0 {
+					fxState = true
+				} else if clanIdx+1 >= len(clanList) {
+					fxState = false
+				}
+				if fxState {
+					clanIdx++
+					// cl_clanid clanList[clanIdx++]
+				} else if !fxState {
+					clanIdx--
+					// cl_clanid clanList[clanIdx--]
+				}
+			}
+			output = fmt.Sprintf("cl_clanid %d", clanList[clanIdx])
+			run(output)
+		}
+		tick++
 	}
 }
 

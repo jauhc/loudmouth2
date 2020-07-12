@@ -26,15 +26,13 @@ var (
 	fxState = true // true fowards, false backwards
 	clanIdx = 0
 
-	// tickers (timers) to handle spamming
-	speechTimer = time.NewTicker(900 * time.Millisecond)
-	clanTimer   = time.NewTicker(500 * time.Millisecond)
-	radioTimer  = time.NewTicker(800 * time.Millisecond)
+	// not actually sure if best approach
+	gayTimer = time.NewTicker(100 * time.Millisecond)
 
 	speechBuffer = list.New()
 
 	// beeping for low ammo warning
-	// no need to worry about unix since it (the game) crashes on connection
+	// no need to worry about linux since it (the game) crashes on connection
 	beep      = syscall.MustLoadDLL("Kernel32.dll").MustFindProc("Beep")
 	stateWait sync.Once
 
@@ -44,10 +42,7 @@ var (
 )
 
 func createTimers() {
-
-	go radioTicker()
-	// go speechTicker()
-	go clanTicker()
+	go gayTicker()
 }
 
 // dum sleep wrapper because im lazy
@@ -87,7 +82,7 @@ func listenerLoop(sock net.Conn) {
 func say(cheese string, isTeam ...bool) {
 	var output string
 	speechBuffer.PushBack(cheese)
-	if speechBuffer.Len() == 1 { // if just one, else let ticker handle it
+	if speechBuffer.Len() == 1 { // if nothing else in queue, dont queue it
 		pop := speechBuffer.Front()
 		if len(isTeam) > 0 {
 			if isTeam[0] {
@@ -98,18 +93,6 @@ func say(cheese string, isTeam ...bool) {
 		}
 		run(output)
 		speechBuffer.Remove(pop)
-	}
-}
-
-// timer for chat output
-func speechTicker() {
-	for range speechTimer.C {
-		if speechBuffer.Len() > 1 {
-			pop := speechBuffer.Front()
-			poop := fmt.Sprintf("say %s", pop.Value)
-			run(poop)
-			speechBuffer.Remove(pop)
-		}
 	}
 }
 
@@ -201,7 +184,7 @@ func consoleParse(toParse string) {
 	}
 	// find stupid symbol -> parse chat message
 	if strings.Index(toParse, uniqueCode) > -1 {
-		// figureOutCommand(toParse)
+		figureOutCommand(toParse)
 	}
 }
 

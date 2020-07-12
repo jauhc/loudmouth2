@@ -44,6 +44,7 @@ type LoudConfig struct {
 |	3. add to checkCvars() function to make it toggleable		|
 |	4. add an alias to it in createConsoleCommands()			|
 +---------------------------------------------------------------+
+TODO reduce steps
 */
 
 func checkCvars(data []string) {
@@ -54,6 +55,8 @@ func checkCvars(data []string) {
 	}
 	switch data[1] {
 	case "LIST":
+		// could remove {} from ouput..
+		// INFACT could format this better overall
 		raw := fmt.Sprintf("%+v", settings.Config)
 		list := strings.Split(raw, " ")
 		for index := 0; index < len(list); index++ {
