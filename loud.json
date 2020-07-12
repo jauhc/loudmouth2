@@ -7,6 +7,7 @@
   "clanfx": true,
   "owo": false,
   "kills": false,
+  "killsradio": false,
   "deaths": false,
   "greets": false,
   "ammowarn": true,

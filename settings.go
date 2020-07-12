@@ -24,15 +24,16 @@ type LoudSettings struct {
 
 // LoudConfig contains settings hardcoded until UI support?
 type LoudConfig struct {
-	State     bool `json:"state"`
-	Clanid    bool `json:"clanid"`
-	Clanfx    bool `json:"clanfx"`
-	Owo       bool `json:"owo"`
-	Kills     bool `json:"kills"`
-	Deaths    bool `json:"deaths"`
-	Greets    bool `json:"greets"`
-	Ammowarn  bool `json:"ammowarn"`
-	Radiospam bool `json:"radiospam"`
+	State      bool `json:"state"`
+	Clanid     bool `json:"clanid"`
+	Clanfx     bool `json:"clanfx"`
+	Owo        bool `json:"owo"`
+	Kills      bool `json:"kills"`
+	Killsradio bool `json:"killsradio"`
+	Deaths     bool `json:"deaths"`
+	Greets     bool `json:"greets"`
+	Ammowarn   bool `json:"ammowarn"`
+	Radiospam  bool `json:"radiospam"`
 }
 
 /*
@@ -94,7 +95,7 @@ func checkCvars(data []string) {
 		break
 
 	case "KILLSRADIO":
-		run("echo #unimplemented")
+		settings.Config.Killsradio = set
 		break
 
 	case "DETH":

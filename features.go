@@ -1,6 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+
+	"github.com/jauhc/go-csgsi"
+)
 
 func featureRadioSpam() {
 	if settings.Config.Radiospam {
@@ -50,4 +55,31 @@ func featureClan() {
 	}
 	output = fmt.Sprintf("cl_clanid %d", clanList[clanIdx])
 	run(output)
+}
+
+func featureKillAnnounce(state *csgsi.State) {
+	if stateOK(state) {
+		if state.Previously.Player.Match_stats.Kills < state.Player.Match_stats.Kills {
+			if settings.Config.Killsradio {
+				run("enemydown")
+			}
+			if settings.Config.Kills {
+				speechBuffer.PushBack(tellKill(state))
+			}
+			return
+		}
+	}
+}
+
+func featureDeathAnnounce(state *csgsi.State) {
+	if stateOK(state) {
+		if state.Previously.Player.Match_stats.Deaths < state.Player.Match_stats.Deaths &&
+			state.Previously.Player.Match_stats.Deaths > 0 {
+			log.Println("DETH")
+			if settings.Config.Deaths {
+				speechBuffer.PushBack(tellDeath(state))
+			}
+			return
+		}
+	}
 }

@@ -34,27 +34,13 @@ func ammoWarning(state *csgsi.State) {
 	}
 }
 
-// DONT READ THIS
 func killCheck(state *csgsi.State) {
-	if stateOK(state) {
-		if state.Previously.Player.Match_stats.Kills < state.Player.Match_stats.Kills {
-			//speechBuffer.PushBack(tellKill(state))
-			run("enemydown")
-			return
-		}
-	}
+	featureKillAnnounce(state)
 }
 
 // dont read this either thanks
 func deathCheck(state *csgsi.State) {
-	if stateOK(state) {
-		if state.Previously.Player.Match_stats.Deaths < state.Player.Match_stats.Deaths &&
-			state.Previously.Player.Match_stats.Deaths > 0 {
-			log.Println("DETH")
-			// speechBuffer.PushBack(tellDeath(state))
-			return
-		}
-	}
+	featureDeathAnnounce(state)
 }
 
 func gayTicker() {
