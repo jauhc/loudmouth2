@@ -7,6 +7,10 @@ import (
 	"github.com/jauhc/go-csgsi"
 )
 
+var (
+	tempAmmo = 0
+)
+
 func featureRadioSpam() {
 	if settings.Config.Radiospam {
 		run("ohn")
@@ -80,6 +84,18 @@ func featureDeathAnnounce(state *csgsi.State) {
 				speechBuffer.PushBack(tellDeath(state))
 			}
 			return
+		}
+	}
+}
+
+func featureAmmoWarning(state *csgsi.State) {
+	w := getActiveGun(state)
+	if isGun(w) {
+		if float32(w.Ammo_clip)/float32(w.Ammo_clip_max) < 0.3 && w.Ammo_clip_max > 1 {
+			if tempAmmo != w.Ammo_clip {
+				beep.Call(90, 41)
+				tempAmmo = w.Ammo_clip
+			}
 		}
 	}
 }

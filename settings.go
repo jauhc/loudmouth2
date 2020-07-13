@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -43,12 +44,16 @@ type LoudConfig struct {
 |	1. add it to struct that reads json	(LoudConfig)			|
 |	2. add to checkCvars() function to make it toggleable		| <-- needs to be scalable
 +---------------------------------------------------------------+
-TODO reduce steps
-	probably best to have struct as reference, then add missing ones to json
 */
 
 func checkCvars(data []string) {
-	fmt.Println(data)
+	if len(data) < 2 {
+		return
+	}
+	// clean strings
+	for i := 0; i < len(data); i++ {
+		data[i] = removeAllOf(data[i], " ")
+	}
 	data[1] = strings.ToUpper(data[1])
 	set := false
 	if data[0] == "1" {
@@ -59,15 +64,38 @@ func checkCvars(data []string) {
 		raw := fmt.Sprintf("%+v", settings.Config)
 		raw = removeAllOf(raw, "{", "}")
 		list := strings.Split(raw, " ")
-		startFancy()
-		defer endFancy()
+		// startFancy()
+		// defer endFancy()
+		startColour()
 		for index := 0; index < len(list); index++ {
-			run(fmt.Sprintf("echo %v \n", list[index]))
+			/*	make string to `setting:bool`
+				split with : to array
+				eval val[1]	*/
+			ss := strings.Split(removeAllOf(list[index], " "), ":")
+			b, err := strconv.ParseBool(ss[1])
+			ec(err)
+			if b {
+				useColour("2fb54aFF")
+				run(fmt.Sprintf("echo %s\n", strings.ToLower(ss[0])))
+			} else {
+				useColour("d15532FF")
+				run(fmt.Sprintf("echo %s\n", strings.ToLower(ss[0])))
+			}
+
+			/// JESUS CHRIST I NEED TO RETHINK THIS
+			// can spam echo since its client command, server doesnt care
+			// split with : -> 2nd value boolean
+			// run(fmt.Sprintf("echo %v\n", strings.ToLower(list[index])))
 		}
+		endColour()
 		break
 
 	case "STATE":
 		settings.Config.State = set
+		break
+
+	case "AMMOWARN":
+		settings.Config.Ammowarn = set
 		break
 
 	case "OWO":

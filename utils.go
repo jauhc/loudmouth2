@@ -39,6 +39,7 @@ var (
 	t            = creatListener(":2121")
 	settings     = readConfig(configFile)
 	terribleHash = generateTerribleHash(9)
+	conColour    = "00000000"
 )
 
 func createTimers() {
@@ -65,20 +66,28 @@ func ec(err error) {
 	}
 }
 
-func startFancy() {
+func startColour() {
 	run("con_filter_enable 1; con_filter_text_out Setting")
 	sleep(45) // somehow necessary...
-	run("log_color console 00D900FF")
 }
 
-func endFancy() {
+func useColour(s string) {
+	if conColour == s {
+		return
+	}
+	conColour = s
+	run(fmt.Sprintf("log_color console %s", conColour)) // 00D900FF
+}
+
+func endColour() {
 	run(fmt.Sprintf("log_color console 00000000; con_filter_text_out %s", terribleHash))
 }
 
 func doFancy(s string) {
-	startFancy()
+	startColour()
+	useColour("FF00FFFF")
 	run(fmt.Sprintf("echo %s", s))
-	endFancy()
+	endColour()
 }
 
 // removes all give substrs of s

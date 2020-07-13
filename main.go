@@ -21,18 +21,6 @@ import (
 	just rewrite shit tbh
 */
 
-func ammoWarning(state *csgsi.State) {
-	w := getActiveGun(state)
-	if isGun(w) {
-		if float32(w.Ammo_clip)/float32(w.Ammo_clip_max) < 0.3 &&
-			w.Ammo_clip_max > 1 {
-			if settings.Config.Ammowarn {
-				beep.Call(80, 168)
-			}
-		}
-	}
-}
-
 func killCheck(state *csgsi.State) {
 	featureKillAnnounce(state)
 }
@@ -72,11 +60,11 @@ func stateParser(gsi *csgsi.Game) {
 		createTimers()
 		createConsoleCommands()
 		for state := range gsi.Channel {
-			if stateOK(&state) {
+			if settings.Config.Ammowarn {
+				featureAmmoWarning(&state) // warms when ammo is low :)
+			}
+			if stateOK(&state) { // sort out the "Previously" shit
 				if state.Round.Phase == "live" && isLocalPlayer(&state) {
-					if settings.Config.Ammowarn {
-						ammoWarning(&state) // warms when ammo is low :)
-					}
 					if settings.Config.Kills {
 						killCheck(&state)
 					}
