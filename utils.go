@@ -65,6 +65,22 @@ func ec(err error) {
 	}
 }
 
+func startFancy() {
+	run("con_filter_enable 1; con_filter_text_out Setting")
+	sleep(45) // somehow necessary...
+	run("log_color console 00D900FF")
+}
+
+func endFancy() {
+	run(fmt.Sprintf("log_color console 00000000; con_filter_text_out %s", terribleHash))
+}
+
+func doFancy(s string) {
+	startFancy()
+	run(fmt.Sprintf("echo %s", s))
+	endFancy()
+}
+
 // removes all give substrs of s
 func removeAllOf(s string, r ...string) (t string) {
 	t = strings.ReplaceAll(s, r[0], "")

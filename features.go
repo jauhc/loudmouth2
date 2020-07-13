@@ -23,7 +23,7 @@ func featureSendChat() {
 }
 
 func featureClan() {
-	clanList := [...]int{7670261, 7670266, 7670268, 7670273, 7670276, 7670621, 7670634, 7670641, 7670647}
+	clanList := []int{7670261, 7670266, 7670268, 7670273, 7670276, 7670621, 7670634, 7670641, 7670647}
 	output := fmt.Sprintf("cl_clanid 0")
 
 	if !settings.Config.Clanid && !settings.Config.Clanfx {
@@ -35,7 +35,7 @@ func featureClan() {
 		}
 	}
 	if !settings.Config.Clanfx && settings.Config.Clanid {
-		if clanIdx >= len(clanList) {
+		if clanIdx+1 >= len(clanList) {
 			clanIdx = 0
 		}
 		clanIdx++

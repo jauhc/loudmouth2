@@ -57,7 +57,10 @@ func checkCvars(data []string) {
 	switch data[1] {
 	case "LIST":
 		raw := fmt.Sprintf("%+v", settings.Config)
+		raw = removeAllOf(raw, "{", "}")
 		list := strings.Split(raw, " ")
+		startFancy()
+		defer endFancy()
 		for index := 0; index < len(list); index++ {
 			run(fmt.Sprintf("echo %v \n", list[index]))
 		}
@@ -150,6 +153,7 @@ func createConsoleCommands() {
 		sleepn(30, 15)
 	}
 
+	run(fmt.Sprintf("con_filter_text_out %s", terribleHash))
 	run("echo Commands created!")
 	sleep(50)
 	run("loud")
