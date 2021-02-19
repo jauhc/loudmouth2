@@ -1,5 +1,5 @@
 *.exe
-run.cmd
+*.cmd
 /.vscode
 /.vs
 *.code-workspace
