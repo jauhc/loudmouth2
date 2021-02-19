@@ -1,4 +1,5 @@
 *.exe
+*.bak
 *.cmd
 /.vscode
 /.vs
