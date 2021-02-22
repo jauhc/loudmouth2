@@ -231,8 +231,11 @@ func consoleParse(toParse string) {
 }
 
 func figureOutCommand(msg string) {
-	message, sender, isTeam := parseChat(msg)
-	println(sender + " said " + message)
+	message, sender, location, isTeam := parseChat(msg)
+	if len(location) > 1 {
+		print("[@" + location + "] ")
+	}
+	println("(" + sender + "): " + message)
 	/*
 		if strings.Index(message, "owo") > -1 || strings.Index(message, "uwu") > -1 {
 			say(getOwo(), isTeam)
@@ -243,47 +246,68 @@ func figureOutCommand(msg string) {
 	}
 }
 
-func parseChat(msg string) (message string, sender string, teamchat bool) {
-	// needs better nil checking
-	// also if you use different language(files) this needs to adapt to that
-	// TODO fix chat parsing (currently broken 100%)
+// probably better just to struct this
+func parseChat(msg string) (message string, sender string, location string, teamchat bool) {
 
-	println(msg)
-	return "", "", false
-
-	isTeam := false
-	var caller string
-	var output string
 	codeIdx := strings.Index(msg, uniqueCode)
-	if codeIdx > -1 {
-		if (strings.Index(msg, "Terrorist)")) > -1 {
+	// var isDead = false
+	var isTeam = false
+	sender = ""
+	location = ""
+
+	// actual checking code begins here //
+	if codeIdx > -1 { // is a player message
+
+		// figure out name
+		if strings.Index(msg, "*") == 0 { // has *DEAD* at start
+			deadmarkerLen := strings.Index(msg[1:], "*")
+			if deadmarkerLen > -1 {
+				sender = msg[deadmarkerLen+3 : codeIdx]
+			}
+		} else { // does NOT have *DEAD* at start
+			sender = msg[:codeIdx]
+		}
+
+		/*
+			if strings.Index(msg, "*DEAD*") > -1 { // is from dead
+				isDead = true
+			}
+		*/
+
+		if strings.Index(msg, "T)") > -1 { // is from team
 			isTeam = true
 		}
-		replacer := strings.NewReplacer(uniqueCode, "", "*DEAD*", "", "(Terrorist) ", "", "(Counter-Terrorist) ", "")
-		replaced := replacer.Replace(msg)
 
-		locationMarker := strings.LastIndex(replaced, "@") // fix
-		if locationMarker > -1 {
-			caller = strings.TrimSpace(replaced[:locationMarker])
-		} else {
-			nameEnd := strings.Index(replaced, " : ")
-			caller = strings.TrimSpace(replaced[:nameEnd])
+		if strings.Index(msg[codeIdx:], "@") > -1 { // has location
+			endofLocation := strings.Index(msg[codeIdx:], ":")
+			location = msg[codeIdx+6 : codeIdx+endofLocation]
+			location = location[:strings.LastIndex(location, "(")-1] // cleanup
+			print("@[" + location + "] ")
 		}
-		// end of SENDER get
-		// start of MSG get
-		msgStart := strings.Index(replaced, " : ")
-		if msgStart > -1 {
-			output = strings.TrimSpace(replaced[msgStart+3:])
-		} else {
-			println("bad msg")
-			return
-		}
-		if len(caller) < 1 {
-			caller = "<empty>"
-		}
-		return output, caller, isTeam
+
+		/*
+				if isTeam {
+					print("(TEAM)")
+				}
+				if isDead {
+					print("<DEAD>")
+				}
+				if !isDead && !isTeam {
+					//print("[ALL]")
+				}
+
+			print("{" + sender + "}")
+		*/
+
+		// remove the shit we already have
+		withoutName := msg[codeIdx+4:]
+		startOfMsg := strings.Index(withoutName, ":")
+		//println(withoutName[startOfMsg+2:])
+		message = withoutName[startOfMsg+2:]
+		return message, sender, location, isTeam
+
 	}
-	return "", "", false
+	return "", "", "", false
 }
 
 func findOccurrence(s string, of ...string) bool {
