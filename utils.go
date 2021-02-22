@@ -244,6 +244,13 @@ func figureOutCommand(msg string) {
 }
 
 func parseChat(msg string) (message string, sender string, teamchat bool) {
+	// needs better nil checking
+	// also if you use different language(files) this needs to adapt to that
+	// TODO fix chat parsing (currently broken 100%)
+
+	println(msg)
+	return "", "", false
+
 	isTeam := false
 	var caller string
 	var output string

@@ -87,6 +87,7 @@ func init() {
 
 func main() {
 	log.Println("---START---")
+	// go startPanelServer() // web page access panel i never finished
 	run("PASS " + settings.Pass)
 	go listenerLoop(t) // thread for listening to rcon
 	log.Println("Console connected!")
