@@ -285,7 +285,7 @@ func parseChat(msg string) (m chatMsg, err error) {
 		}
 
 		if strings.Index(msg, "T)") > -1 { // is from team
-			m.IsDead = true
+			m.Teamchat = true
 		}
 
 		if strings.Index(msg[codeIdx:], "@") > -1 { // has location
@@ -295,27 +295,28 @@ func parseChat(msg string) (m chatMsg, err error) {
 			print("@[" + m.Location + "] ")
 		}
 
-		if m.Teamchat {
-			print("(TEAM)")
-		}
-		if m.IsDead {
-			print("<DEAD>")
-		}
-		if !m.IsDead && !m.Teamchat {
-			//print("[ALL]")
-		}
+		/*
+			if m.Teamchat {
+				print("(TEAM)")
+			}
+			if m.IsDead {
+				print("<DEAD>")
+			}
+			if !m.IsDead && !m.Teamchat {
+				//print("[ALL]")
+			}
 
-		print("{" + m.Sender + "}")
+			print("{" + m.Sender + "}")
+		*/
 
 		// remove the shit we already have
 		withoutName := msg[codeIdx+4:]
 		startOfMsg := strings.Index(withoutName, ":")
-		//println(withoutName[startOfMsg+2:])
 		m.Message = withoutName[startOfMsg+2:]
 		return m, nil
 
 	}
-	return m, errors.New("Unable to parse message")
+	return m, errors.New("Unable to parse chat message")
 }
 
 func findOccurrence(s string, of ...string) bool {
