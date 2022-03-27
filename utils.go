@@ -177,7 +177,7 @@ func stateOK(state *csgsi.State) bool {
 	if state.Previously != nil && state.Round != nil {
 		if state.Previously.Player != nil {
 			if state.Previously.Player.Match_stats != nil {
-				log.Println(fmt.Sprintf("aaaa %s", state.Player.State.Flashed))
+				log.Println(fmt.Sprintf("aaaa %#v", state.Player.State.Flashed))
 				return true
 			}
 		}
