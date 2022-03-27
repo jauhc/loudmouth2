@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
+	"os"
+	"runtime"
 	"time"
 
 	"github.com/jauhc/go-csgsi"
@@ -42,7 +45,7 @@ func gayTicker() {
 			featureRadioSpam()
 		}
 
-		if tick%9 == 0 {
+		if tick%9 == 0 { // every 900 ms
 			featureSendChat()
 		}
 
@@ -83,10 +86,28 @@ func init() {
 	seed ^= (seed >> 25)
 	seed ^= (seed << 27)
 	rand.Seed(seed) // big seed
+	log.SetOutput(os.Stdout)
+
+	if runtime.GOOS != "windows" {
+		// can be removed if and when valve fixes crashing on linux
+		println("invalid OS")
+		os.Exit(1)
+	}
 }
 
-func main() {
-	log.Println("---START---")
+func main() { // why the fuck nothing prints
+	println("---START---")
+	log.Println("Finding telnet creds...")
+	getTelnetParams()
+	log.Println("Generating 'hash'...")
+	for {
+		terribleHash = generateTerribleHash(9)
+		if len(terribleHash) > 1 {
+			break
+		}
+	}
+
+	settings.User = getSteamID(true)
 	// go startPanelServer() // web page access panel i never finished
 	run("PASS " + settings.Pass)
 	go listenerLoop(t) // thread for listening to rcon
@@ -96,6 +117,6 @@ func main() {
 	log.Println("Listener created!")
 	stateParser(gsi)
 
-	gsi.Listen(":1489")
+	gsi.Listen(fmt.Sprintf(":%s", settings.Gsiport)) // telnet port
 	log.Println("----END----")
 }

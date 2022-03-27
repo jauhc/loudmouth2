@@ -11,13 +11,17 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/andygrunwald/vdf"
 )
 
 // LoudSettings represents root level config: user, configs
 type LoudSettings struct {
-	User   string     `json:"user"` // your steamcommunity id
-	Pass   string     `json:"pass"` // console connection password, same as -netconpassword
-	Config LoudConfig `json:"config"`
+	User    string     `json:"user"`    // your steamcommunity id
+	Gsiport string     `json:"gsiport"` // port used by GSI
+	Netport string     `json:"netport"` // console port
+	Pass    string     `json:"pass"`    // console connection password, same as -netconpassword
+	Config  LoudConfig `json:"config"`
 }
 
 // password is static until i can figure out how to automate this
@@ -45,6 +49,36 @@ type LoudConfig struct {
 |	2. add to checkCvars() function to make it toggleable		| <-- needs to be scalable
 +---------------------------------------------------------------+
 */
+
+// TODO
+// https://github.com/andygrunwald/vdf
+func getTelnetParams() {
+	pa, err := getRegistryValue("SOFTWARE\\Valve\\Steam", "SteamPath")
+	ec(err)
+	file := fmt.Sprintf("[%s/userdata/%s/config/localconfig.vdf]", pa, getSteamID(false))
+	f, err := os.Open(file)
+	ec(err)
+
+	p := vdf.NewParser(f)
+	m, err := p.Parse()
+	ec(err)
+
+	// holy SHIT
+	rawparams := fmt.Sprintf("%s", m["UserLocalConfigStore"].(map[string]interface{})["Software"].(map[string]interface{})["Valve"].(map[string]interface{})["Steam"].(map[string]interface{})["apps"].(map[string]interface{})["730"].(map[string]interface{})["LaunchOptions"])
+	params := strings.Split(rawparams, " ")
+
+	for i := 0; i < len(params); i++ {
+		if params[i] == "-netconport" {
+			settings.Netport = params[i+1]
+			println("Port found in launch params:", settings.Netport)
+		}
+		if params[i] == "-netconpassword" {
+			settings.Pass = params[i+1]
+			println("PASS found in params:", settings.Pass)
+		}
+	}
+	saveConfig()
+}
 
 func checkCvars(data []string) {
 	if len(data) < 2 {
@@ -115,7 +149,7 @@ func checkCvars(data []string) {
 		settings.Config.Clanfx = set
 		break
 
-	case "DMGREPORT":
+	case "DMGREPORT": // prob never done since cant check for alive players
 		run("echo #unimplemented")
 		break
 

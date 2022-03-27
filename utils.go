@@ -8,10 +8,13 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
+
+	"golang.org/x/sys/windows/registry"
 
 	"github.com/jauhc/go-csgsi"
 )
@@ -37,7 +40,7 @@ var (
 	beep      = syscall.MustLoadDLL("Kernel32.dll").MustFindProc("Beep")
 	stateWait sync.Once
 
-	t            = creatListener(":2121")
+	t            = creatListener(fmt.Sprintf(":%s", settings.Netport))
 	settings     = readConfig(configFile)
 	terribleHash = generateTerribleHash(9)
 	conColour    = "00000000"
@@ -45,6 +48,15 @@ var (
 
 func createTimers() {
 	go gayTicker()
+}
+
+// method to run func with ease
+type funcDef func()
+
+func do(howmany int, fun funcDef) {
+	for i := 0; i < howmany; i++ {
+		fun()
+	}
 }
 
 // dum sleep wrapper because im lazy
@@ -165,6 +177,7 @@ func stateOK(state *csgsi.State) bool {
 	if state.Previously != nil && state.Round != nil {
 		if state.Previously.Player != nil {
 			if state.Previously.Player.Match_stats != nil {
+				log.Println(fmt.Sprintf("aaaa %s", state.Player.State.Flashed))
 				return true
 			}
 		}
@@ -178,6 +191,43 @@ func run(cheese string) {
 	t.Write([]byte(cheese + "\n"))
 }
 
+func getRegistryValue(path string, key string) (string, error) {
+
+	k, err := registry.OpenKey(registry.CURRENT_USER, path, 1)
+	ec(err)
+	defer k.Close()
+	var buf [128]byte // questionable
+	_, keytype, err := k.GetValue(key, buf[:])
+	ec(err)
+	if keytype == 4 { // DWORD
+		data, _, err := k.GetIntegerValue(key)
+		ec(err)
+		u := strconv.FormatUint(data, 10)
+		return u, nil
+	} else if keytype == 1 { // SZ
+		data, _, err := k.GetStringValue(key)
+		ec(err)
+		return data, nil
+	}
+	return "", errors.New("registry read went wrong?")
+	// need more types, not for now though
+}
+
+// true for communityid, false for steam3id
+func getSteamID(community bool) string {
+	user, err := getRegistryValue("SOFTWARE\\Valve\\Steam\\ActiveProcess", "ActiveUser")
+	ec(err)
+	if community == true {
+		// return COMMUNITY ID
+		co, err := strconv.ParseUint(user, 10, 32)
+		ec(err)
+		return fmt.Sprintf("7656%d\n", co+1197960265728)
+	}
+	// return STEAM3ID
+	return user
+}
+
+// prevents shit from spectated players
 func isLocalPlayer(state *csgsi.State) bool {
 	return state.Player.SteamId == settings.User
 }
@@ -227,7 +277,7 @@ func consoleParse(toParse string) {
 	}
 	// find stupid symbol -> parse chat message
 	if strings.Index(toParse, uniqueCode) > -1 {
-		figureOutCommand(toParse)
+		formatChatMessage(toParse)
 	}
 }
 
@@ -239,7 +289,7 @@ type chatMsg struct {
 	IsDead   bool
 }
 
-func figureOutCommand(msg string) {
+func formatChatMessage(msg string) {
 	m, err := parseChat(msg)
 
 	if err != nil {
@@ -247,22 +297,23 @@ func figureOutCommand(msg string) {
 		return
 	}
 
-	if len(m.Location) > 1 {
-		print("[@" + m.Location + "] ")
-	}
-	println("(" + m.Sender + "): " + m.Message)
 	/*
-		if strings.Index(message, "owo") > -1 || strings.Index(message, "uwu") > -1 {
-			say(getOwo(), isTeam)
-		} // commented because i dont trust my own code
+		if len(m.Location) > 1 {
+			print("[@" + m.Location + "] ")
+		}
+		println("(" + m.Sender + "): " + m.Message)
 	*/
-	if findOccurrence(m.Message, "owo", "uwu") {
-		say(getOwo(), m.Teamchat)
-	}
+
+	checkCommands(m) // checks for commands
+	// TODO make a more scriptlike format for this (external file?)
+
 }
 
 func parseChat(msg string) (m chatMsg, err error) {
-
+	//
+	// using the textmod below
+	// https://gist.github.com/xPaw/056b29be7ae9c143ed623a9c4c10cf50#file-csgo_bananagaming-txt
+	//
 	codeIdx := strings.Index(msg, uniqueCode)
 	m.Sender = ""
 	m.Location = ""

@@ -20,3 +20,7 @@ explaining files and their contents
 in short: a csgo spambot
 
 longer: read code lol
+
+
+###known issues
+- game crashes on linux upon connection

@@ -116,3 +116,18 @@ func tellDeath(state *csgsi.State) string {
 func getOwo() string {
 	return gOwo[rand.Intn(len(gOwo))]
 }
+
+// how to spend cpu cycles 101
+func checkCommands(m chatMsg) {
+
+	if findOccurrence(m.Message, "owo", "uwu") {
+		say(getOwo(), m.Teamchat)
+		return
+	}
+
+	if findOccurrence(m.Message, "d20", "!roll", "!rtd") {
+		out := fmt.Sprintf("d20: %d", rand.Intn(20)+1)
+		say(out, m.Teamchat)
+		return
+	}
+}

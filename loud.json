@@ -1,6 +1,8 @@
 {
  "user": "76561198002017712",
- "pass": "anim#",
+ "gsiport": "1489",
+ "netport": "2121",
+ "pass": "#",
  "config": {
   "state": true,
   "clanid": true,

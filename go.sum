@@ -1,2 +1,6 @@
+github.com/andygrunwald/vdf v1.0.0 h1:2HuC85EVF1Sm1bwKH8tiyucny2qzf9GSjB3flsdqoM4=
+github.com/andygrunwald/vdf v1.0.0/go.mod h1:qi5jZfY3lrHXbibKeC2MCEge1tOsLODBgOHoS+RbRLk=
 github.com/jauhc/go-csgsi v0.0.0-20200117061346-56c029018d85 h1:V0EUh+sWyNYezYh0e+RzrHWisJOo87/tDt1BiRY5vGw=
 github.com/jauhc/go-csgsi v0.0.0-20200117061346-56c029018d85/go.mod h1:7katRHbQE3zggvfa1ZHGOBjBzMA9ohVEYlhNVMoCb/c=
+golang.org/x/sys v0.0.0-20210305034016-7844c3c200c3 h1:RdE7htvBru4I4VZQofQjCZk5W9+aLNlSF5n0zgVwm8s=
+golang.org/x/sys v0.0.0-20210305034016-7844c3c200c3/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
