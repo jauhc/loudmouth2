@@ -19,8 +19,10 @@ explaining files and their contents
 ## "i somehow ended up here, what is this?"
 in short: a csgo spambot
 
-longer: read code lol
+###longer:
+csgo (source engine in general, at some point after l4d) allows one to connect to its console remotely by setting `-netconport` launch parameter value.
 
+in raw form its essentially just opening a connection to said port then listen for data (requires authentication with `PASS passwordhere` if using `-netconpassword` (not sure if its limited to local connections))
 
 ###known issues
 - game crashes on linux upon connection
