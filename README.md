@@ -1,4 +1,5 @@
 # loudmouth2
+## [NOTE] project archived; as of CS2, no longer functions
 
 rewrite of a personal project -
 first iteration was c#, but now i wanted to make a native and golang seemed optimal
